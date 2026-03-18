@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kasir - RS SEKAR LARAS</title>
+    <style>
+        /* ==========================================
+           TAMPILAN LAYAR (UI APLIKASI KASIR)
+           ========================================== */
+        :root {
+            --primary: #4361ee;
+            --primary-hover: #3f37c9;
+            --success: #2ecc71;
+            --success-hover: #27ae60;
+            --warning: #f39c12;
+            --warning-hover: #e67e22;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --info: #17a2b8;
+            --info-hover: #138496;
+            --bg-body: #f4f7fe;
+            --bg-card: #ffffff;
+            --text-main: #2b3674;
+            --border-color: #e2e8f0;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-body); margin: 0; padding: 20px; color: #333; }
+        
+        .no-print { background: var(--bg-card); max-width: 1100px; margin: 0 auto; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; transition: all 0.3s; }
+        .no-print h2 { margin-top: 0; color: var(--text-main); font-size: 1.25rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
+
+        .form-group { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: flex-start; }
+        .form-wrapper { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 5px; }
+        .form-wrapper label { font-size: 13px; font-weight: 600; color: var(--text-main); }
+        
+        .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="datetime-local"] { 
+            padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background-color: #f8fafc; transition: all 0.3s; height: 42px;
+        }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15); background-color: #fff; }
+        
+        .radio-group { display: flex; gap: 20px; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #f8fafc; width: 100%; box-sizing: border-box; height: 42px;}
+        .radio-group label { cursor: pointer; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 5px; font-size: 14px;}
+
+        button { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        #btnTambah { background: var(--success); color: #fff; white-space: nowrap; height: 42px; }
+        #btnTambah:hover { background: var(--success-hover); transform: translateY(-1px); }
+        
+        .btn-diskon { background: var(--info); color: #fff; height: 42px; width: 100%; }
+        .btn-diskon:hover { background: var(--info-hover); transform: translateY(-1px); }
+
+        .btn-edit { background: var(--warning); color: #fff; padding: 6px 12px; font-size: 12px; height: auto;}
+        .btn-edit:hover { background: var(--warning-hover); }
+        .btn-hapus { background: var(--danger); color: #fff; padding: 6px 12px; font-size: 12px; height: auto;}
+        .btn-hapus:hover { background: var(--danger-hover); }
+        .btn-clear { background: #94a3b8; color: #fff; padding: 8px 15px; font-size: 13px; margin-top: 5px; width: 100%; height: auto;}
+        
+        .btn-preview { background: var(--primary); color: #fff; font-size: 16px; margin-top: 20px; width: 100%; padding: 15px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; height: auto;}
+        .btn-preview:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3); }
+
+        .signature-container { display: flex; flex-direction: column; gap: 5px; width: 100%; max-width: 300px; }
+        canvas { border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; cursor: crosshair; touch-action: none; width: 100%; height: 150px; }
+
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--border-color); margin-top: 10px;}
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 700px; }
+        th { background-color: #f8fafc; padding: 12px; text-align: left; font-weight: 600; color: var(--text-main); border-bottom: 2px solid var(--border-color); font-size: 13px; white-space: nowrap;}
+        td { padding: 12px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 14px;}
+        tbody tr:hover { background-color: #f1f5f9; }
+        .action-buttons { display: flex; gap: 5px; justify-content: center;}
+
+        .summary-box { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 25px; border-radius: 12px; margin-top: 25px; border: 1px solid var(--border-color); }
+        .summary-box h3 { margin: 15px 0 0 0; color: var(--text-main); font-size: 1.5rem; text-align: right; border-top: 2px dashed #cbd5e1; padding-top: 15px; }
+        
+        .breakdown-text { font-size: 14px; color: #475569; margin-bottom: 12px; line-height: 1.6; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;}
+        .breakdown-text strong { color: var(--text-main); font-size: 15px; float: right; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .no-print { padding: 15px; }
+            .form-wrapper { width: 100%; min-width: 100%; }
+            #btnTambah { width: 100%; margin-top: 10px;}
+            .summary-box .form-group { flex-direction: column; }
+            .signature-container { max-width: 100%; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons button { width: 100%; }
+            .breakdown-text { font-size: 13px; }
+            .breakdown-text strong { font-size: 14px; }
+            .summary-box h3 { font-size: 1.25rem; text-align: center; }
+        }
+
+        /* ==========================================
+           MODAL & POPUP CSS
+           ========================================== */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px); padding: 15px; box-sizing: border-box;
+        }
+        .modal-content {
+            background: #fff; width: 100%; max-width: 850px; max-height: 95vh;
+            border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .modal-content.sm { max-width: 400px; }
+        
+        .modal-header { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; color: var(--text-main); font-size: 16px;}
+        .close-btn { background: none; border: none; font-size: 28px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1;}
+        .close-btn:hover { color: var(--danger); }
+        
+        .modal-body { padding: 20px; overflow-y: auto; display: flex; justify-content: center; }
+        .modal-body.bg-gray { background: #cbd5e1; }
+        .modal-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        
+        .paper-preview { background: #fff; padding: 40px; width: 100%; max-width: 210mm; min-height: 297mm; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow-x: auto;}
+
+        /* CSS untuk Layout Cetak */
+        .print-layout { font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000; }
+        .print-layout .header { text-align: center; margin-bottom: 25px; }
+        .print-layout .header-logo { width: auto; max-width: 100%; max-height: 80px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+        .print-layout .header h1 { margin: 5px 0 0 0; font-size: 16px; font-weight: bold; }
+        .print-layout .header p { margin: 2px 0; }
+        .print-layout .info-table, .print-layout .item-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: none; }
+        .print-layout .info-table td { padding: 2px 5px; border: none; }
+        .print-layout .item-table th, .print-layout .item-table td { border-bottom: 1px dashed #000; padding: 5px; text-align: right; }
+        .print-layout .item-table th:nth-child(2), .print-layout .item-table td:nth-child(2) { text-align: left; }
+        .print-layout .item-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; }
+        .print-layout .total-row td { font-weight: bold; }
+        .print-layout .footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;}
+        .print-layout .signature-img { max-width: 150px; max-height: 80px; display: block; margin: 5px 0; object-fit: contain; }
+
+        #printArea { display: none; }
+
+        @media print {
+            body { background: #fff; margin: 0; padding: 0; }
+            .no-print, .modal-overlay { display: none !important; }
+            #printArea { display: block !important; }
+            .print-layout { padding: 0; } 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <h2>Input Data Pasien & Perawatan</h2>
+        
+        <div class="form-group">
+            <div class="form-wrapper">
+                <label>Jenis Perawatan</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="jenisRawat" value="Rawat Jalan" checked onchange="toggleJenisRawat()"> Rawat Jalan (RJ)</label>
+                    <label><input type="radio" name="jenisRawat" value="Rawat Inap" onchange="toggleJenisRawat()"> Rawat Inap (RI)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-wrapper"><label>Nama Pasien</label><input type="text" id="namaPasien" placeholder="Masukkan Nama Pasien"></div>
+            <div class="form-wrapper"><label>No. RM</label><input type="text" id="noRM" placeholder="Contoh: 008701"></div>
+            <div class="form-wrapper"><label id="labelRuangPoli">Poli</label><input type="text" id="ruangPoli" placeholder="Poli (Misal: Poli Umum)"></div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-wrapper" style="flex: 2;"><label>Alamat Pasien</label><input type="text" id="alamat" placeholder="Alamat Lengkap"></div>
+            <div class="form-wrapper"><label>No. Registrasi</label><input type="text" id="noReg" placeholder="Contoh: RBI-26-02..."></div>
+            <div class="form-wrapper"><label>No. Kuitansi</label><input type="text" id="noKuitansi" placeholder="Contoh: KRI2602..."></div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-wrapper">
+                <label id="labelTglMasuk">Tgl Periksa:</label>
+                <input type="datetime-local" id="tglMasuk">
+            </div>
+            <div class="form-wrapper" id="containerTglPulang" style="display: none;">
+                <label>Tgl Pulang:</label>
+                <input type="datetime-local" id="tglPulang">
+            </div>
+        </div>
+
+        <h2 style="margin-top: 15px;">Input Tindakan / Obat</h2>
+        <div class="form-group" style="align-items: flex-end;">
+            <div class="form-wrapper" style="flex: 3; min-width: 200px;">
+                <label>Keterangan Tindakan / Obat</label>
+                <input type="text" id="keterangan" placeholder="Contoh: Periksa Dokter Umum">
+            </div>
+            
+            <div class="form-wrapper" style="flex: 0.5; min-width: 60px;">
+                <label>Qty</label>
+                <input type="number" id="qty" value="1" min="1" oninput="onInputQtyTarif()">
+            </div>
+            
+            <div class="form-wrapper" style="flex: 1.5; min-width: 120px;">
+                <label>Tarif (Rp)</label>
+                <input type="number" id="tarif" placeholder="0" oninput="onInputQtyTarif()">
+            </div>
+            
+            <div class="form-wrapper" style="flex: 1; min-width: 120px; position: relative;">
+                <label>Diskon Potongan</label>
+                <button type="button" class="btn-diskon" onclick="bukaModalDiskonItem()">🏷️ Atur Diskon</button>
+                <div id="infoDiskonItem" style="position: absolute; top: 100%; left: 0; font-size: 11px; color: var(--danger); font-weight: bold; margin-top: 4px; display: none;">- Rp 0</div>
+            </div>
+
+            <button id="btnTambah" onclick="simpanItem()">+ Tambah Item</button>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Keterangan</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th>Tarif</th>
+                        <th>Jumlah</th>
+                        <th style="color: var(--danger);">Potongan</th>
+                        <th>Total</th>
+                        <th style="text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelInputItem">
+                    <tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 30px;">Belum ada item ditambahkan.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-box">
+            <h2 style="border: none; padding: 0; margin-bottom: 15px;">Diskon & Data Kasir</h2>
+            
+            <div class="form-group" style="align-items: flex-start;">
+                <div class="form-wrapper" style="flex: 1.5;">
+                    <div class="breakdown-text">
+                        Subtotal Harga Asli: <strong>Rp <span id="labelSubtotalAsli">0</span></strong><br>
+                        Total Potongan Item: <strong style="color: var(--danger);">- Rp <span id="labelPotonganItem">0</span></strong>
+                    </div>
+
+                    <label for="diskonPersen" style="font-size: 14px; margin-top: 10px;">Diskon Keseluruhan Tambahan (%):</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                        <input type="number" id="diskonPersen" class="input-persen" placeholder="0" value="0" min="0" max="100" oninput="hitungTotal()" style="max-width: 80px;">
+                        <span style="color: #64748b; font-size: 13px;">(Rp <span id="labelNominalDiskon">0</span>)</span>
+                    </div>
+                </div>
+
+                <div class="form-wrapper signature-container">
+                    <label>Nama Kasir:</label>
+                    <input type="text" id="namaKasir" placeholder="Masukkan Nama Anda">
+                    
+                    <label style="margin-top: 10px;">Tanda Tangan Kasir:</label>
+                    <canvas id="signaturePad" width="300" height="150"></canvas>
+                    <button class="btn-clear" onclick="clearSignature()">🧹 Bersihkan</button>
+                </div>
+            </div>
+
+            <h3 style="word-break: break-word;">Total Dibayar: Rp <span id="labelTotalAkhir">0</span></h3>
+        </div>
+        
+        <button class="btn-preview" onclick="tampilkanPreview()">📄 Preview & Cetak Struk</button>
+    </div>
+
+    <div class="modal-overlay" id="modalDiskonItemLayar">
+        <div class="modal-content sm">
+            <div class="modal-header">
+                <h3>🏷️ Atur Diskon Item</h3>
+                <button class="close-btn" onclick="tutupModalDiskonItem()">&times;</button>
+            </div>
+            <div class="modal-body" style="flex-direction: column; gap: 15px; display: flex;">
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+                    <span style="color: #64748b; font-size: 13px;">Harga Dasar (Qty x Tarif)</span><br>
+                    <strong style="font-size: 20px; color: var(--text-main);">Rp <span id="modalHargaDasar">0</span></strong>
+                </div>
+                <div class="form-wrapper">
+                    <label>Diskon Persentase (%)</label>
+                    <input type="number" id="modalInputPersen" placeholder="0" min="0" max="100" oninput="kalkulasiModalDiskon('persen')">
+                </div>
+                <div class="form-wrapper">
+                    <label>Potongan Nominal (Rp)</label>
+                    <input type="number" id="modalInputNominal" placeholder="0" min="0" oninput="kalkulasiModalDiskon('nominal')">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button style="background: #94a3b8; padding: 10px 20px; border-radius: 8px; border: none; color: white; cursor: pointer; font-weight: bold;" onclick="tutupModalDiskonItem()">Batal</button>
+                <button style="background: var(--success); padding: 10px 20px; border-radius: 8px; border: none; color: white; cursor: pointer; font-weight: bold;" onclick="simpanModalDiskonItem()">💾 Simpan Diskon</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pratinjau Struk PDF</h3>
+                <button class="close-btn" onclick="tutupPreview()">&times;</button>
+            </div>
+            <div class="modal-body bg-gray">
+                <div id="previewContent" class="print-layout paper-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button style="background: #94a3b8; padding: 10px 20px; border-radius: 8px; border: none; color: white; cursor: pointer; font-weight: bold;" onclick="tutupPreview()">Batal</button>
+                <button style="background: var(--primary); padding: 10px 20px; border-radius: 8px; border: none; color: white; cursor: pointer; font-weight: bold;" onclick="cetakKePrinter()">🖨️ Cetak Printer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="printArea" class="print-layout">
+        <div class="header">
+            <img class="header-logo" src="https://i.ibb.co.com/rGjhrdS0/jukebox-removed.png" alt="Logo RS Sekar Laras" crossorigin="anonymous">
+            
+            <h1>RS SEKAR LARAS</h1>
+            <p>Jl. Gajah Mada RT.02 RW.15 PURWODADI</p>
+            <p>PERINCIAN BIAYA PERAWATAN <span id="cetakJenisRawat" style="text-transform: uppercase;"></span></p>
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <td width="20%">Nama Pasien</td><td width="30%">: <span id="cetakNamaPasien"></span></td>
+                <td width="20%" id="labelCetakTglMasuk">Tanggal Periksa</td><td width="30%">: <span id="cetakTglMasuk"></span></td>
+            </tr>
+            <tr>
+                <td>No. RM</td><td>: <span id="cetakRM"></span></td>
+                <td id="labelCetakTglPulang"></td><td id="valueCetakTglPulang"></td>
+            </tr>
+            <tr>
+                <td>Alamat</td><td>: <span id="cetakAlamat"></span></td>
+                <td id="labelCetakRuangPoli">Poli</td><td>: <span id="cetakRuangPoli"></span></td>
+            </tr>
+            <tr>
+                <td>Jenis Perawatan</td><td>: <span id="cetakJenisRawatTabel"></span></td>
+                <td>No. Registrasi</td><td>: <span id="cetakReg"></span></td>
+            </tr>
+            <tr>
+                <td></td><td></td>
+                <td>No. Kuitansi</td><td>: <span id="cetakKuitansi"></span></td>
+            </tr>
+        </table>
+
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Keterangan</th>
+                    <th>Qty</th>
+                    <th>Tarif</th>
+                    <th>Jumlah</th>
+                    <th>Potongan</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="tabelCetakItem"></tbody>
+            <tfoot>
+                <tr><td colspan="6" style="text-align: right;">SUBTOTAL</td><td id="cetakSubtotalAsli">0</td></tr>
+                <tr><td colspan="6" style="text-align: right;">TOTAL POTONGAN ITEM</td><td id="cetakTotalPotonganItem">0</td></tr>
+                <tr><td colspan="6" style="text-align: right;" id="cetakDiskonLabel">DISKON KESELURUHAN (0%)</td><td id="cetakDiskonNominal">0</td></tr>
+                <tr class="total-row"><td colspan="6" style="text-align: right;">JUMLAH BIAYA YANG HARUS DIBAYAR</td><td id="cetakGrandTotal">0</td></tr>
+            </tfoot>
+        </table>
+
+        <div class="footer">
+            <div>
+                <p>Kasir,</p>
+                <img id="cetakTandaTangan" class="signature-img" src="" alt="" style="display: none;">
+                <p style="font-weight: bold; text-decoration: underline;" id="cetakNamaKasirTarget">(.........................)</p>
+            </div>
+            <div style="text-align: right;"><p>DICETAK: <span id="cetakTimestamp"></span></p></div>
+        </div>
+    </div>
+
+    <script>
+        // ================== LOGIKA RUANG/POLI & TANGGAL ==================
+        function toggleJenisRawat() {
+            let jenisRawat = document.querySelector('input[name="jenisRawat"]:checked').value;
+            let inputField = document.getElementById('ruangPoli');
+            let labelRuangPoli = document.getElementById('labelRuangPoli');
+            
+            let labelTglMasuk = document.getElementById('labelTglMasuk');
+            let containerTglPulang = document.getElementById('containerTglPulang');
+
+            if (jenisRawat === "Rawat Jalan") { 
+                labelRuangPoli.innerText = "Poli";
+                inputField.placeholder = "Poli (Misal: Poli Umum)"; 
+                labelTglMasuk.innerText = "Tgl Periksa:";
+                containerTglPulang.style.display = "none";
+            } else { 
+                labelRuangPoli.innerText = "Ruang";
+                inputField.placeholder = "Ruang (Misal: Argapura 104)"; 
+                labelTglMasuk.innerText = "Tgl Masuk:";
+                containerTglPulang.style.display = "flex";
+            }
+        }
+        window.onload = toggleJenisRawat; 
+
+        let items = [];
+        let editIndex = -1; 
+
+        // State untuk Popup Diskon Sementara sebelum ditambahkan ke Tabel
+        let tempDiskonPersen = 0;
+        let tempDiskonNominal = 0;
+
+        // ================== LOGIKA TANDA TANGAN ==================
+        const canvas = document.getElementById('signaturePad');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let hasSignature = false; 
+
+        function getCoordinates(event) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;   
+            const scaleY = canvas.height / rect.height; 
+            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true; hasSignature = true; 
+            const { x, y } = getCoordinates(e);
+            ctx.beginPath(); ctx.moveTo(x, y); e.preventDefault(); 
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const { x, y } = getCoordinates(e);
+            ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#0f172a";
+            ctx.lineTo(x, y); ctx.stroke(); e.preventDefault();
+        }
+
+        function stopDrawing() { isDrawing = false; }
+        function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); hasSignature = false; }
+
+        canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false }); canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // ================== LOGIKA KASIR & POPUP DISKON ==================
+        function formatRupiah(angka) { return parseFloat(angka).toLocaleString('id-ID'); }
+
+        function updateUIInfoDiskon() {
+            let infoEl = document.getElementById('infoDiskonItem');
+            if (tempDiskonNominal > 0) {
+                infoEl.innerHTML = `- Rp ${formatRupiah(tempDiskonNominal)} <span style="color:#64748b; font-weight:normal;">(${tempDiskonPersen}%)</span>`;
+                infoEl.style.display = "block";
+            } else {
+                infoEl.style.display = "none";
+            }
+        }
+
+        // Dipanggil saat Kasir ngetik Qty / Tarif langsung di layar
+        function onInputQtyTarif() {
+            let qty = parseFloat(document.getElementById('qty').value) || 0;
+            let tarif = parseFloat(document.getElementById('tarif').value) || 0;
+            let jumlah = qty * tarif;
+
+            // Jika sebelumnya sdh disetting persentase diskon, otomatis sesuaikan nominalnya
+            if (tempDiskonPersen > 0) {
+                tempDiskonNominal = (jumlah * tempDiskonPersen) / 100;
+            }
+            updateUIInfoDiskon();
+        }
+
+        function bukaModalDiskonItem() {
+            let qty = parseFloat(document.getElementById('qty').value) || 0;
+            let tarif = parseFloat(document.getElementById('tarif').value) || 0;
+            let jumlah = qty * tarif;
+
+            if (jumlah === 0) {
+                alert("Mohon isi Tarif (Rp) terlebih dahulu sebelum mengatur diskon.");
+                document.getElementById('tarif').focus();
+                return;
+            }
+
+            document.getElementById('modalHargaDasar').innerText = formatRupiah(jumlah);
+            document.getElementById('modalInputPersen').value = tempDiskonPersen || '';
+            document.getElementById('modalInputNominal').value = tempDiskonNominal || '';
+            
+            document.getElementById('modalDiskonItemLayar').style.display = 'flex';
+        }
+
+        function tutupModalDiskonItem() {
+            document.getElementById('modalDiskonItemLayar').style.display = 'none';
+        }
+
+        // Kalkulasi di dalam Popup
+        function kalkulasiModalDiskon(sumber) {
+            let qty = parseFloat(document.getElementById('qty').value) || 0;
+            let tarif = parseFloat(document.getElementById('tarif').value) || 0;
+            let jumlah = qty * tarif;
+
+            let inputPersen = document.getElementById('modalInputPersen');
+            let inputNominal = document.getElementById('modalInputNominal');
+
+            if (jumlah === 0) return;
+
+            if (sumber === 'persen') {
+                let persen = parseFloat(inputPersen.value) || 0;
+                if (persen > 100) persen = 100;
+                if (persen < 0) persen = 0;
+                let nominal = (jumlah * persen) / 100;
+                inputNominal.value = nominal;
+            } 
+            else if (sumber === 'nominal') {
+                let nominal = parseFloat(inputNominal.value) || 0;
+                if (nominal > jumlah) nominal = jumlah;
+                if (nominal < 0) nominal = 0;
+                let persen = (nominal / jumlah) * 100;
+                inputPersen.value = Math.round(persen * 100) / 100; 
+            } 
+        }
+
+        function simpanModalDiskonItem() {
+            tempDiskonPersen = parseFloat(document.getElementById('modalInputPersen').value) || 0;
+            tempDiskonNominal = parseFloat(document.getElementById('modalInputNominal').value) || 0;
+            updateUIInfoDiskon();
+            tutupModalDiskonItem();
+        }
+
+        function simpanItem() {
+            let ket = document.getElementById('keterangan').value;
+            let qty = parseFloat(document.getElementById('qty').value) || 0;
+            let tarif = parseFloat(document.getElementById('tarif').value) || 0;
+
+            if(!ket || !tarif) { alert("Keterangan dan Tarif harus diisi!"); return; }
+
+            let jumlah = qty * tarif;
+            let potongan = tempDiskonNominal;
+            let total = jumlah - potongan;
+            
+            let itemObj = { ket, qty, tarif, jumlah, diskonPersen: tempDiskonPersen, potongan, total };
+
+            if (editIndex === -1) { items.push(itemObj); } 
+            else { 
+                items[editIndex] = itemObj;
+                editIndex = -1;
+                let btn = document.getElementById('btnTambah');
+                btn.innerText = "+ Tambah Item"; btn.style.backgroundColor = "var(--success)";
+            }
+
+            updateTabelInput(); hitungTotal();
+            
+            // Bersihkan form
+            document.getElementById('keterangan').value = ''; 
+            document.getElementById('tarif').value = '';
+            document.getElementById('qty').value = '1'; 
+            
+            // Reset state diskon item
+            tempDiskonPersen = 0;
+            tempDiskonNominal = 0;
+            updateUIInfoDiskon();
+
+            document.getElementById('keterangan').focus();
+        }
+
+        function editItem(index) {
+            let item = items[index];
+            document.getElementById('keterangan').value = item.ket; 
+            document.getElementById('qty').value = item.qty;
+            document.getElementById('tarif').value = item.tarif; 
+            
+            tempDiskonPersen = item.diskonPersen;
+            tempDiskonNominal = item.potongan;
+            updateUIInfoDiskon();
+
+            editIndex = index; 
+            
+            let btn = document.getElementById('btnTambah');
+            btn.innerHTML = "💾 Simpan Perubahan"; btn.style.backgroundColor = "var(--warning)";
+            document.getElementById('keterangan').focus();
+        }
+
+        function hapusItem(index) {
+            if (confirm("Apakah Anda yakin ingin menghapus item ini?")) {
+                items.splice(index, 1); 
+                if (editIndex === index) {
+                    editIndex = -1;
+                    document.getElementById('keterangan').value = ''; document.getElementById('tarif').value = ''; document.getElementById('qty').value = '1';
+                    tempDiskonPersen = 0; tempDiskonNominal = 0; updateUIInfoDiskon();
+                    let btn = document.getElementById('btnTambah');
+                    btn.innerText = "+ Tambah Item"; btn.style.backgroundColor = "var(--success)";
+                }
+                updateTabelInput(); hitungTotal();
+            }
+        }
+
+        function updateTabelInput() {
+            let tbody = document.getElementById('tabelInputItem');
+            tbody.innerHTML = '';
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 30px;">Belum ada item ditambahkan.</td></tr>`; return;
+            }
+            items.forEach((item, index) => {
+                let teksPotongan = item.potongan > 0 ? `Rp ${formatRupiah(item.potongan)} <br><small>(${item.diskonPersen}%)</small>` : "-";
+
+                tbody.innerHTML += `<tr>
+                    <td><strong>${item.ket}</strong></td>
+                    <td style="text-align: center;">${item.qty}</td>
+                    <td>Rp ${formatRupiah(item.tarif)}</td>
+                    <td>Rp ${formatRupiah(item.jumlah)}</td>
+                    <td style="color: var(--danger); font-weight: bold;">${teksPotongan}</td>
+                    <td style="color: var(--primary); font-weight: bold;">Rp ${formatRupiah(item.total)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editItem(${index})">✎ Edit</button>
+                            <button class="btn-hapus" onclick="hapusItem(${index})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function hitungTotal() {
+            let subtotalAsli = items.reduce((sum, item) => sum + item.jumlah, 0); 
+            let totalPotonganItem = items.reduce((sum, item) => sum + item.potongan, 0); 
+            let subtotalSetelahPotonganItem = items.reduce((sum, item) => sum + item.total, 0); 
+            
+            let persenDiskon = parseFloat(document.getElementById('diskonPersen').value) || 0;
+            if (persenDiskon < 0) persenDiskon = 0; if (persenDiskon > 100) persenDiskon = 100;
+
+            let nominalDiskonGlobal = (subtotalSetelahPotonganItem * persenDiskon) / 100;
+            let grandTotal = subtotalSetelahPotonganItem - nominalDiskonGlobal;
+            
+            document.getElementById('labelSubtotalAsli').innerText = formatRupiah(subtotalAsli);
+            document.getElementById('labelPotonganItem').innerText = formatRupiah(totalPotonganItem);
+            document.getElementById('labelNominalDiskon').innerText = formatRupiah(nominalDiskonGlobal);
+            document.getElementById('labelTotalAkhir').innerText = formatRupiah(grandTotal);
+            
+            return { subtotalAsli, totalPotonganItem, subtotalSetelahPotonganItem, persenDiskon, nominalDiskonGlobal, grandTotal };
+        }
+
+        function formatTanggal(isoString) {
+            if(!isoString) return "-";
+            let date = new Date(isoString);
+            return date.toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:'2-digit'});
+        }
+
+        // ================== LOGIKA PREVIEW & CETAK ==================
+        function siapkanDataCetak() {
+            document.getElementById('cetakNamaPasien').innerText = document.getElementById('namaPasien').value;
+            document.getElementById('cetakRM').innerText = document.getElementById('noRM').value;
+            document.getElementById('cetakAlamat').innerText = document.getElementById('alamat').value;
+            document.getElementById('cetakReg').innerText = document.getElementById('noReg').value;
+            document.getElementById('cetakKuitansi').innerText = document.getElementById('noKuitansi').value;
+            
+            let jenisRawat = document.querySelector('input[name="jenisRawat"]:checked').value;
+            document.getElementById('cetakJenisRawat').innerText = `(${jenisRawat})`;
+            document.getElementById('cetakJenisRawatTabel').innerText = jenisRawat;
+            
+            if (jenisRawat === "Rawat Jalan") { 
+                document.getElementById('labelCetakRuangPoli').innerText = "Poli"; 
+                document.getElementById('labelCetakTglMasuk').innerText = "Tanggal Periksa";
+                document.getElementById('labelCetakTglPulang').innerText = ""; 
+                document.getElementById('valueCetakTglPulang').innerHTML = ""; 
+            } else { 
+                document.getElementById('labelCetakRuangPoli').innerText = "Ruang"; 
+                document.getElementById('labelCetakTglMasuk').innerText = "Tanggal Masuk";
+                document.getElementById('labelCetakTglPulang').innerText = "Tanggal Pulang"; 
+                document.getElementById('valueCetakTglPulang').innerHTML = ": " + formatTanggal(document.getElementById('tglPulang').value); 
+            }
+            
+            document.getElementById('cetakRuangPoli').innerText = document.getElementById('ruangPoli').value;
+            document.getElementById('cetakTglMasuk').innerText = formatTanggal(document.getElementById('tglMasuk').value);
+
+            let tbodyCetak = document.getElementById('tabelCetakItem');
+            tbodyCetak.innerHTML = '';
+            items.forEach((item, index) => {
+                tbodyCetak.innerHTML += `<tr>
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td>${item.ket}</td>
+                    <td>${item.qty}</td>
+                    <td>${formatRupiah(item.tarif)}</td>
+                    <td>${formatRupiah(item.jumlah)}</td>
+                    <td>${formatRupiah(item.potongan)}</td>
+                    <td>${formatRupiah(item.total)}</td>
+                </tr>`;
+            });
+
+            let hitung = hitungTotal();
+            document.getElementById('cetakSubtotalAsli').innerText = formatRupiah(hitung.subtotalAsli);
+            document.getElementById('cetakTotalPotonganItem').innerText = formatRupiah(hitung.totalPotonganItem);
+            document.getElementById('cetakDiskonLabel').innerText = `DISKON KESELURUHAN (${hitung.persenDiskon}%)`;
+            document.getElementById('cetakDiskonNominal').innerText = formatRupiah(hitung.nominalDiskonGlobal);
+            document.getElementById('cetakGrandTotal').innerText = formatRupiah(hitung.grandTotal);
+            
+            document.getElementById('cetakTimestamp').innerText = formatTanggal(new Date().toISOString());
+
+            let namaKasirInput = document.getElementById('namaKasir').value;
+            document.getElementById('cetakNamaKasirTarget').innerText = namaKasirInput ? namaKasirInput.toUpperCase() : "(.........................)";
+            
+            let imgElement = document.getElementById('cetakTandaTangan');
+            
+            if(hasSignature) { 
+                let dataTandaTangan = canvas.toDataURL("image/png");
+                imgElement.src = dataTandaTangan; 
+                imgElement.style.display = 'block'; 
+            } else { 
+                imgElement.style.display = 'none'; 
+                imgElement.src = "";
+            }
+        }
+
+        function tampilkanPreview() {
+            if(items.length === 0) {
+                alert("Harap masukkan minimal 1 item/tindakan sebelum mencetak!"); return;
+            }
+            
+            siapkanDataCetak();
+            document.getElementById('previewContent').innerHTML = document.getElementById('printArea').innerHTML;
+            document.getElementById('previewModal').style.display = "flex";
+        }
+
+        function tutupPreview() {
+            document.getElementById('previewModal').style.display = "none";
+        }
+
+        function cetakKePrinter() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
